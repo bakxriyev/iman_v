@@ -21,7 +21,7 @@ const HeroVideoPlayer: React.FC<HeroVideoPlayerProps> = ({
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const menuRef = useRef<HTMLDivElement>(null);
   const isHoveringRef = useRef(false);
 

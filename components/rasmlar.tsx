@@ -6,7 +6,7 @@ const TestimonialsSection: React.FC = () => {
   const [isTestimonialAutoPlay, setIsTestimonialAutoPlay] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  const testimonialAutoPlayRef = useRef<NodeJS.Timeout>();
+  const testimonialAutoPlayRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Testimonial rasm urllari 1 dan 32 gacha
   const testimonials = Array.from({ length: 32 }, (_, i) => ({
