@@ -4,7 +4,7 @@ module.exports = {
     {
       name: "iman_v",
       script: "node_modules/.bin/next",
-      args: "start -p 3000",
+      args: "start -p 3030",
       cwd: "/home/ubuntu/iman_v",
       env: {
         NODE_ENV: "production"
