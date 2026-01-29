@@ -1,8 +1,12 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 const VideoCarouselSection: React.FC = () => {
   const [currentVideo, setCurrentVideo] = useState(0);
+  const [isInView, setIsInView] = useState(false);
+  const [videosLoaded, setVideosLoaded] = useState(false);
   const [videoStates, setVideoStates] = useState([
     { isPlaying: false, currentTime: 0, duration: 0, isLoading: false, volume: 1, isMuted: false },
     { isPlaying: false, currentTime: 0, duration: 0, isLoading: false, volume: 1, isMuted: false },
@@ -13,6 +17,7 @@ const VideoCarouselSection: React.FC = () => {
   const [showVideoControls, setShowVideoControls] = useState(false);
   
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null, null, null]);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const videos = [
     { id: 1, title: "Uy so`raganlar ...", src: "/v1.mp4", poster: "/logo.png" },
@@ -22,11 +27,44 @@ const VideoCarouselSection: React.FC = () => {
     { id: 5, title: "O`zimni o`ldirishga ham tayyor edim ...", src: "/v5.mp4", poster: "/logo.png" }
   ];
 
+  // Intersection Observer - faqat ko'ringan paytda yuklanadi
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !isInView) {
+            console.log('Video bo\'limi ko\'rindi, yuklanmoqda...');
+            setIsInView(true);
+            // 500ms kutib, keyin videolarni yuklash
+            setTimeout(() => {
+              setVideosLoaded(true);
+            }, 500);
+          }
+        });
+      },
+      {
+        threshold: 0.1, // 10% ko'ringanda yuklash boshlaydi
+        rootMargin: '100px' // 100px oldinroq yuklash
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, [isInView]);
+
   // Video o'zgarganda barcha videolarni to'xtatish
   useEffect(() => {
+    if (!videosLoaded) return;
+    
     console.log(`Current video changed to: ${currentVideo}`);
     
-    // Barcha videolarni to'xtatish
     videoRefs.current.forEach((video, idx) => {
       if (video && idx !== currentVideo) {
         video.pause();
@@ -34,21 +72,21 @@ const VideoCarouselSection: React.FC = () => {
       }
     });
     
-    // Hozirgi videoni preload qilish
     const currentVideoEl = videoRefs.current[currentVideo];
     if (currentVideoEl) {
-      currentVideoEl.load(); // Videoni qayta yuklash
+      currentVideoEl.load();
     }
-  }, [currentVideo]);
+  }, [currentVideo, videosLoaded]);
 
-  // Birinchi videoni yuklash
+  // Birinchi videoni yuklash - faqat ko'ringanda
   useEffect(() => {
+    if (!videosLoaded) return;
+    
     const firstVideo = videoRefs.current[0];
     if (firstVideo) {
       console.log('Birinchi videoni yuklamoqda...');
       firstVideo.load();
       
-      // Video yuklanganidan keyin loading'ni o'chirish
       const handleCanPlay = () => {
         console.log('Birinchi video tayyor');
         setVideoStates(prev => prev.map((state, i) => 
@@ -64,22 +102,19 @@ const VideoCarouselSection: React.FC = () => {
         firstVideo.removeEventListener('loadedmetadata', handleCanPlay);
       };
     }
-  }, []);
+  }, [videosLoaded]);
 
   const nextVideo = () => {
     const next = (currentVideo + 1) % videos.length;
-    console.log(`Keyingi videoga o'tish: ${currentVideo} -> ${next}`);
     setCurrentVideo(next);
   };
 
   const prevVideo = () => {
     const prev = currentVideo === 0 ? videos.length - 1 : currentVideo - 1;
-    console.log(`Oldingi videoga o'tish: ${currentVideo} -> ${prev}`);
     setCurrentVideo(prev);
   };
 
   const changeToVideo = (index: number) => {
-    console.log(`${index}-videoga o'tish`);
     setCurrentVideo(index);
   };
 
@@ -88,7 +123,6 @@ const VideoCarouselSection: React.FC = () => {
     if (!video) return;
 
     if (video.paused) {
-      // Ovoz bilan o'ynatish
       video.muted = false;
       video.volume = 1;
       
@@ -113,8 +147,6 @@ const VideoCarouselSection: React.FC = () => {
     const newMutedState = !videoStates[currentVideo].isMuted;
     video.muted = newMutedState;
     video.volume = newMutedState ? 0 : 1;
-    
-    console.log(`Ovoz ${newMutedState ? 'o\'chirildi' : 'yoqildi'}`);
     
     setVideoStates(prev => prev.map((state, i) => 
       i === currentVideo ? { ...state, isMuted: newMutedState, volume: newMutedState ? 0 : 1 } : state
@@ -145,7 +177,7 @@ const VideoCarouselSection: React.FC = () => {
   };
 
   return (
-    <section className="px-4 py-12 md:py-16">
+    <section ref={sectionRef} className="px-4 py-12 md:py-16">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 text-transparent bg-clip-text mb-4 md:mb-0 text-center md:text-left">
@@ -179,7 +211,17 @@ const VideoCarouselSection: React.FC = () => {
                 onMouseLeave={() => setShowVideoControls(false)}
                 onMouseMove={() => setShowVideoControls(true)}
               >
-                {videoStates[currentVideo].isLoading && (
+                {/* Placeholder - videolar yuklanmagunga qadar */}
+                {!videosLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900/90 to-purple-900/90 backdrop-blur-sm z-10">
+                    <div className="text-center">
+                      <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-white/80 text-lg">Video tayyorlanmoqda...</p>
+                    </div>
+                  </div>
+                )}
+
+                {videoStates[currentVideo].isLoading && videosLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900/90 to-purple-900/90 backdrop-blur-sm z-10">
                     <div className="text-center">
                       <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -189,20 +231,19 @@ const VideoCarouselSection: React.FC = () => {
                   </div>
                 )}
 
-                {/* Barcha videolarni render qilish - faqat hozirgi ko'rinadi */}
-                {videos.map((video, index) => (
+                {/* Videolar - faqat ko'ringanda render qilinadi */}
+                {videosLoaded && videos.map((video, index) => (
                   <video
                     key={video.id}
                     ref={(el) => { videoRefs.current[index] = el; }}
                     className={`w-full h-full object-cover ${index === currentVideo ? 'block' : 'hidden'}`}
-                    preload="auto"
+                    preload={index === 0 ? "auto" : "none"}
                     playsInline
                     loop
                     poster={video.poster}
                     onLoadedMetadata={(e) => {
                       const videoDuration = e.currentTarget?.duration;
                       if (videoDuration !== undefined && videoDuration !== null && !isNaN(videoDuration)) {
-                        console.log(`Video ${index} metadata yuklandi, duration: ${videoDuration}`);
                         setVideoStates(prev => prev.map((state, i) => 
                           i === index ? { ...state, duration: videoDuration, isLoading: false } : state
                         ));
@@ -236,8 +277,8 @@ const VideoCarouselSection: React.FC = () => {
                   </video>
                 ))}
 
-                {/* Play tugmasi - Video to'xtaganda ko'rinadi */}
-                {!videoStates[currentVideo].isPlaying && !videoStates[currentVideo].isLoading && (
+                {/* Play tugmasi */}
+                {videosLoaded && !videoStates[currentVideo].isPlaying && !videoStates[currentVideo].isLoading && (
                   <div 
                     className="absolute inset-0 bg-gradient-to-br from-purple-900/60 to-purple-700/40 backdrop-blur-sm flex items-center justify-center transition-all duration-500 cursor-pointer z-20"
                     onClick={toggleVideoPlay}
@@ -253,8 +294,8 @@ const VideoCarouselSection: React.FC = () => {
                   </div>
                 )}
 
-                {/* Pause tugmasi - Video o'ynayotganda ko'rinadi */}
-                {videoStates[currentVideo].isPlaying && showVideoControls && (
+                {/* Pause tugmasi */}
+                {videosLoaded && videoStates[currentVideo].isPlaying && showVideoControls && (
                   <button
                     onClick={toggleVideoPlay}
                     className="absolute inset-0 flex items-center justify-center z-20 group"
@@ -267,53 +308,57 @@ const VideoCarouselSection: React.FC = () => {
                   </button>
                 )}
 
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-2 cursor-pointer z-30"
-                  onClick={handleVideoProgressClick}
-                >
-                  <div className="relative h-full bg-white/10">
+                {videosLoaded && (
+                  <>
                     <div 
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                      style={{ width: videoStates[currentVideo].duration ? 
-                        `${(videoStates[currentVideo].currentTime / videoStates[currentVideo].duration) * 100}%` : '0%' 
-                      }}
-                    ></div>
-                  </div>
-                </div>
+                      className="absolute bottom-0 left-0 right-0 h-2 cursor-pointer z-30"
+                      onClick={handleVideoProgressClick}
+                    >
+                      <div className="relative h-full bg-white/10">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                          style={{ width: videoStates[currentVideo].duration ? 
+                            `${(videoStates[currentVideo].currentTime / videoStates[currentVideo].duration) * 100}%` : '0%' 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
 
-                <div className={`absolute bottom-4 left-4 right-4 flex items-center justify-between z-30 transition-opacity duration-300 ${
-                  showVideoControls ? 'opacity-100' : 'opacity-0'
-                }`}>
-                  <div className="text-white text-sm font-medium bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
-                    {formatVideoTime(videoStates[currentVideo].currentTime)} / {formatVideoTime(videoStates[currentVideo].duration)}
-                  </div>
+                    <div className={`absolute bottom-4 left-4 right-4 flex items-center justify-between z-30 transition-opacity duration-300 ${
+                      showVideoControls ? 'opacity-100' : 'opacity-0'
+                    }`}>
+                      <div className="text-white text-sm font-medium bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+                        {formatVideoTime(videoStates[currentVideo].currentTime)} / {formatVideoTime(videoStates[currentVideo].duration)}
+                      </div>
 
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleVideoMute();
-                    }}
-                    className="bg-black/50 backdrop-blur-sm p-2 rounded-full hover:scale-110 transition-transform"
-                  >
-                    {videoStates[currentVideo].isMuted ? (
-                      <VolumeX className="w-5 h-5 text-white" />
-                    ) : (
-                      <Volume2 className="w-5 h-5 text-white" />
-                    )}
-                  </button>
-                </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVideoMute();
+                        }}
+                        className="bg-black/50 backdrop-blur-sm p-2 rounded-full hover:scale-110 transition-transform"
+                      >
+                        {videoStates[currentVideo].isMuted ? (
+                          <VolumeX className="w-5 h-5 text-white" />
+                        ) : (
+                          <Volume2 className="w-5 h-5 text-white" />
+                        )}
+                      </button>
+                    </div>
 
-                <div className="absolute top-4 left-4 right-4 z-20">
-                  <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg">
-                    <h3 className="text-white font-bold text-center text-sm md:text-base">
-                      {videos[currentVideo].title}
-                    </h3>
-                  </div>
-                </div>
+                    <div className="absolute top-4 left-4 right-4 z-20">
+                      <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg">
+                        <h3 className="text-white font-bold text-center text-sm md:text-base">
+                          {videos[currentVideo].title}
+                        </h3>
+                      </div>
+                    </div>
 
-                <div className="absolute top-4 right-4 bg-gradient-to-br from-purple-600 to-purple-800 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg z-20">
-                  {currentVideo + 1} / {videos.length}
-                </div>
+                    <div className="absolute top-4 right-4 bg-gradient-to-br from-purple-600 to-purple-800 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg z-20">
+                      {currentVideo + 1} / {videos.length}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-2 z-10">
@@ -333,49 +378,47 @@ const VideoCarouselSection: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 bg-gradient-to-b from-purple-900/20 to-transparent">
-            <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide" style={{scrollbarWidth: 'none'}}>
-              {videos.map((video, index) => (
-                <button
-                  key={video.id}
-                  onClick={() => changeToVideo(index)}
-                  className={`flex-shrink-0 w-24 h-36 md:w-32 md:h-48 rounded-lg overflow-hidden border-2 transition-all duration-300 relative group ${
-                    index === currentVideo 
-                      ? 'border-purple-500 scale-105 shadow-lg shadow-purple-500/50' 
-                      : 'border-transparent hover:border-purple-300/50 hover:scale-105'
-                  }`}
-                >
-                  <div className="aspect-[9/16] w-full h-full bg-gradient-to-br from-purple-900/30 to-pink-900/30">
-                    <div className="relative w-full h-full">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur-sm flex items-center justify-center">
-                        <div className="text-center p-2">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/80 to-pink-600/80 flex items-center justify-center mx-auto mb-2">
-                            {index === currentVideo && videoStates[index].isPlaying ? (
-                              <Pause className="w-5 h-5 text-white" />
-                            ) : (
-                              <Play className="w-5 h-5 text-white ml-0.5" />
-                            )}
+          {videosLoaded && (
+            <div className="p-4 bg-gradient-to-b from-purple-900/20 to-transparent">
+              <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide" style={{scrollbarWidth: 'none'}}>
+                {videos.map((video, index) => (
+                  <button
+                    key={video.id}
+                    onClick={() => changeToVideo(index)}
+                    className={`flex-shrink-0 w-24 h-36 md:w-32 md:h-48 rounded-lg overflow-hidden border-2 transition-all duration-300 relative group ${
+                      index === currentVideo 
+                        ? 'border-purple-500 scale-105 shadow-lg shadow-purple-500/50' 
+                        : 'border-transparent hover:border-purple-300/50 hover:scale-105'
+                    }`}
+                  >
+                    <div className="aspect-[9/16] w-full h-full bg-gradient-to-br from-purple-900/30 to-pink-900/30">
+                      <div className="relative w-full h-full">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur-sm flex items-center justify-center">
+                          <div className="text-center p-2">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/80 to-pink-600/80 flex items-center justify-center mx-auto mb-2">
+                              {index === currentVideo && videoStates[index].isPlaying ? (
+                                <Pause className="w-5 h-5 text-white" />
+                              ) : (
+                                <Play className="w-5 h-5 text-white ml-0.5" />
+                              )}
+                            </div>
+                            <p className="text-white text-[9px] font-semibold">{video.title}</p>
                           </div>
-                          <p className="text-white text-[9px] font-semibold"> {video.title}</p>
-                          
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {index === currentVideo && videoStates[index].isPlaying && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    </div>
-                  )}
-                  
-                 
-                </button>
-              ))}
+                    
+                    {index === currentVideo && videoStates[index].isPlaying && (
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
-       
 
         <div className="text-center">
           <button className="bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6] text-white font-black py-6 px-20 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
