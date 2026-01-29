@@ -15,11 +15,11 @@ const VideoCarouselSection: React.FC = () => {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null, null, null]);
 
   const videos = [
-    { id: 1, title: "Uy so`raganlar ...", src: "/v1.MP4", poster: "/logo.png" },
-    { id: 2, title: "Meditsina davosini topa olmagan ...", src: "/v2.MP4", poster: "/logo.png" },
-    { id: 3, title: "1 yarim oy ichida 90  mln qarzdorlikdan qutuldim ...", src: "/v3.MP4", poster: "/logo.png" },
-    { id: 4, title: "Uy oldim ...", src: "/v4.MP4", poster: "/logo.png" },
-    { id: 5, title: "O`zimni o`ldirishga ham tayyor edim ...", src: "/v5.MP4", poster: "/logo.png" }
+    { id: 1, title: "Uy so`raganlar ...", src: "/v1.mp4", poster: "/logo.png" },
+    { id: 2, title: "Meditsina davosini topa olmagan ...", src: "/v2.mp4", poster: "/logo.png" },
+    { id: 3, title: "1 yarim oy ichida 90  mln qarzdorlikdan qutuldim ...", src: "/v3.mp4", poster: "/logo.png" },
+    { id: 4, title: "Uy oldim ...", src: "/v4.mp4", poster: "/logo.png" },
+    { id: 5, title: "O`zimni o`ldirishga ham tayyor edim ...", src: "/v5.mp4", poster: "/logo.png" }
   ];
 
   // Video o'zgarganda barcha videolarni to'xtatish
