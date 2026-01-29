@@ -1,27 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "wistia-player": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      > & {
-        "media-id"?: string;
-        aspect?: string;
-        playsinline?: string;
-        silentautoplay?: string;
-        preload?: string;
-        controlsVisibleOnLoad?: string;
-        fullscreenButton?: string;
-        playButton?: string;
-        settingsControl?: string;
-        volumeControl?: string;
-      };
-    }
-  }
-}
+
 const HeroVideoPlayer: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -106,23 +86,24 @@ const HeroVideoPlayer: React.FC = () => {
 
           {/* ✅ Wistia Player */}
           <wistia-player
-            media-id="go38znbq56"
-            aspect="1.7777777777777777"
-            playsinline="true"
-            preload="auto"
-            controlsVisibleOnLoad="true"
-            fullscreenButton="true"
-            playButton="true"
-            settingsControl="true"
-            volumeControl="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              display: "block",
-            }}
-          />
+  media-id="go38znbq56"
+  aspect="1.7777777777777777"
+  playsinline="true"
+  preload="auto"
+  controlsvisibleonload="true"
+  fullscreenbutton="true"
+  playbutton="true"
+  settingscontrol="true"
+  volumecontrol="true"
+  style={{
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    display: "block",
+  }}
+/>
+
         </div>
       </div>
 
