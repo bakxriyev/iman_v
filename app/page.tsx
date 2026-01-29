@@ -36,8 +36,8 @@ const ImanAhmedovaLanding: React.FC = () => {
           <Header />
           <MainHeading />
           <HeroVideoPlayer 
-            onPlayToggle={handlePlayToggle}
-            onFullscreenToggle={handleFullscreenToggle}
+           
+            
           />
           <RegistrationForm onSubmit={handleFormSubmit} />
           
