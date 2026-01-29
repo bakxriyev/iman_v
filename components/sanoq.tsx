@@ -52,7 +52,18 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     : '';
 
   return (
-    <div></div>
+    <div className={containerStyles}>
+      <div className="max-w-4xl mx-auto text-center">
+        <p className={`${size === 'small' ? 'text-xs' : 'text-sm md:text-base'} mb-1`}>
+          24 soatdan so'ng qabul yopiladi:
+        </p>
+        <div className={`${timeStyles[size]} font-bold text-white`}>
+          {String(countdown.hours).padStart(2, '0')}:
+          {String(countdown.minutes).padStart(2, '0')}:
+          {String(countdown.seconds).padStart(2, '0')}
+        </div>
+      </div>
+    </div>
   );
 };
 

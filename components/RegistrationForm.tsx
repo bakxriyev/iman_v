@@ -14,7 +14,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) => {
 
   return (
     <div className="max-w-md mx-auto border-3 border-purple-400/50 rounded-3xl p-6 md:p-8 mb-6 bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-500/10 backdrop-blur-sm shadow-[0_0_30px_rgba(139,92,246,0.3)]">
-      <h3 className="text-xl md:text-2xl font-black text-center mb-6 bg-gradient-to-r from-purple-300 to-purple-400 text-transparent bg-clip-text">
+      <h3 className="text-2xl md:text-3xl font-black text-center mb-6 bg-gradient-to-r from-purple-300 to-purple-400 text-transparent bg-clip-text">
         KURSGA QATNASHISH UCHUN<br/>RO'YXATDAN O'TING:
       </h3>
       

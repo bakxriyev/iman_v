@@ -43,7 +43,7 @@ const ImanAhmedovaLanding: React.FC = () => {
           
           {/* Hero Countdown Timer */}
           <div className="text-center">
-            
+            <p className="text-sm md:text-base mb-2">24 soatdan so'ng qabul yopiladi:</p>
             <CountdownTimer 
               initialHours={13}
               initialMinutes={18}
@@ -55,12 +55,13 @@ const ImanAhmedovaLanding: React.FC = () => {
       </section>
 
      
-      <InstructorSection  />
+      <InstructorSection />
        <BeforeAfterSection  />
-      <TestimonialsSection  />
       <VideoCarouselSection  />
+      <TestimonialsSection  />
 
-     
+      <RegistrationForm  />
+
       {/* Fixed Countdown Timer at Bottom */}
       <CountdownTimer 
         initialHours={24}
