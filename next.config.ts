@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // ✅ 1. Asosiy optimizatsiya sozlamalari
   reactStrictMode: true,
-  swcMinify: true, // SWC - juda tez minifier
   compress: true, // Gzip compression
   
   // ✅ 2. Turbopack muammosini hal qilish
