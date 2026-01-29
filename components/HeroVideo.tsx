@@ -34,7 +34,7 @@ const HeroVideoPlayer: React.FC = () => {
         setIsLoaded(true);
         clearInterval(interval);
       }
-    }, 100);
+    }, 0);
 
     // 4️⃣ Timeout (10s)
     const timeout = setTimeout(() => {
