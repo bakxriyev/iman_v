@@ -35,10 +35,7 @@ const ImanAhmedovaLanding: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <Header />
           <MainHeading />
-          <HeroVideoPlayer 
-           
-            
-          />
+          <HeroVideoPlayer />
           <RegistrationForm onSubmit={handleFormSubmit} />
           
           {/* Hero Countdown Timer */}
@@ -57,10 +54,8 @@ const ImanAhmedovaLanding: React.FC = () => {
      
       <InstructorSection />
        <BeforeAfterSection  />
-      <VideoCarouselSection  />
       <TestimonialsSection  />
-
-      <RegistrationForm  />
+      <VideoCarouselSection  />
 
       {/* Fixed Countdown Timer at Bottom */}
       <CountdownTimer 
