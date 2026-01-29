@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Modal from './ReegisterModal';
 
 const TestimonialsSection: React.FC = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isTestimonialAutoPlay, setIsTestimonialAutoPlay] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   
+    const [isModalOpen, setIsModalOpen] = useState(false);
+  
 const testimonialAutoPlayRef =
   useRef<ReturnType<typeof setTimeout> | null>(null);
+  
 
 
   // Testimonial rasm urllari 1 dan 32 gacha
@@ -174,12 +178,16 @@ const testimonialAutoPlayRef =
           </div>
           
         </div>
-        <div className="text-center">
-          <button className="bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6] text-white font-black py-6 px-20 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
-            Kursga qatnashish
-          </button>
-        </div>
+         <div className="text-center mt-2">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6] text-white font-black py-6 px-20 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Kursga qatnashish
+            </button>
+          </div>
       </div>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 };
