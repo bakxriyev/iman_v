@@ -1,165 +1,259 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const BACKEND_API_URL = "https://b.imanakhmedovna.uz/users";
 const TELEGRAM_BOT_USERNAME = "ImanAkhmedovna_bot";
 
-interface RegistrationFormProps {
-  onSubmit?: (data: { name: string; phone: string }) => void;
-  isModal?: boolean;
-  onClose?: () => void;
-}
+const COUNTRIES = [
+  { code: '998', flag: '🇺🇿', name: "O'zbekiston" },
+  { code: '7', flag: '🇷🇺', name: "Rossiya" },
+  { code: '7', flag: '🇰🇿', name: "Qozog'iston" },
+  { code: '992', flag: '🇹🇯', name: "Tojikiston" },
+  { code: '993', flag: '🇹🇲', name: "Turkmaniston" },
+  { code: '996', flag: '🇰🇬', name: "Qirg'iziston" },
+  { code: '994', flag: '🇦🇿', name: "Ozarbayjon" },
+  { code: '90', flag: '🇹🇷', name: "Turkiya" },
+  { code: '1', flag: '🇺🇸', name: "AQSh" },
+  { code: '44', flag: '🇬🇧', name: "Buyuk Britaniya" },
+];
 
-const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, isModal = false, onClose }) => {
-  const [formData, setFormData] = useState({ name: '', phone: '' });
+const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = ({ isModal = false, onClose }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '', // Faqat raqamlar, masalan: "901234567"
+    countryCode: '998',
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneInputValue, setPhoneInputValue] = useState(''); // Input'da ko'rinadigan qiymat
+  
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    
-    if (!value.startsWith('998')) {
-      if (value.length > 0) {
-        value = '998' + value;
-      }
+  const selectedCountry = COUNTRIES.find(c => c.code === formData.countryCode) || COUNTRIES[0];
+
+  // Modal ochilganda ism inputiga focus
+  useEffect(() => {
+    if (isModal && nameInputRef.current) {
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
     }
-    
-    if (value.length > 12) {
-      value = value.slice(0, 12);
-    }
-    
-    setFormData({ 
-      ...formData, 
-      phone: value 
-    });
-    
-    e.target.value = formatPhoneNumber(value);
+  }, [isModal]);
+
+  // Mamlakat o'zgarganda telefon input'ini tozalash
+  useEffect(() => {
+    setPhoneInputValue('');
+    setFormData(prev => ({ ...prev, phone: '' }));
+  }, [formData.countryCode]);
+
+  // Ism o'zgartirish
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, name: e.target.value });
   };
 
-  const formatPhoneNumber = (phone: string): string => {
-    if (!phone) return '+998';
+  // Telefon raqamini o'zgartirish - SODDA VERSIYA
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     
-    let formatted = '+' + phone.slice(0, 3);
-    if (phone.length > 3) {
-      formatted += ' ' + phone.slice(3, 5);
-    }
-    if (phone.length > 5) {
-      formatted += ' ' + phone.slice(5, 8);
-    }
-    if (phone.length > 8) {
-      formatted += ' ' + phone.slice(8, 12);
-    }
-    return formatted;
+    // Faqat raqamlar qabul qilish
+    const numbersOnly = value.replace(/\D/g, '');
+    
+    // Input'da ko'rinish uchun
+    setPhoneInputValue(numbersOnly);
+    
+    // Asosiy state uchun
+    setFormData({ ...formData, phone: numbersOnly });
+  };
+
+  // Mamlakat o'zgarganda
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const code = e.target.value;
+    setFormData({ 
+      ...formData, 
+      countryCode: code,
+      phone: ''
+    });
+    setPhoneInputValue('');
+    
+    // Telefon inputiga focus qaytarish
+    setTimeout(() => {
+      phoneInputRef.current?.focus();
+    }, 50);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Validatsiya
+    if (!formData.name.trim()) {
+      alert("Iltimos, ismingizni kiriting");
+      nameInputRef.current?.focus();
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.phone || formData.phone.length < 7) {
+      alert("Iltimos, to'liq telefon raqamini kiriting (kamida 7 raqam)");
+      phoneInputRef.current?.focus();
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Backendga ma'lumotlarni jo'natish
-      const backendPromise = fetch(BACKEND_API_URL, {
+      // Backendga yuborish (998901234567 formatida)
+      const fullPhone = formData.countryCode + formData.phone;
+      
+      console.log('Yuborilayotgan ma\'lumotlar:', {
+        full_name: formData.name.trim(),
+        phone_number: fullPhone,
+        address: "b"
+      });
+
+      const response = await fetch(BACKEND_API_URL, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-          full_name: formData.name,
-          phone_number: formData.phone,
-          address: "b", // Doim "b" qiymati
-          timestamp: new Date().toISOString(),
-        })
-      }).catch(err => {
-        console.error('Backend yuborishda xatolik:', err);
+          full_name: formData.name.trim(),
+          phone_number: fullPhone,
+          address: "b"
+        }),
       });
 
-      // Telegram botga yuborish
-      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${encodeURIComponent(formData.phone)}`;
-      window.open(telegramUrl, '_blank');
-
-      // Orqada backend ishlashini kutamiz
-      backendPromise.then(() => {
-        console.log('Ma\'lumotlar backendga muvaffaqiyatli yuborildi');
-      });
-
-      // Agar tashqaridan onSubmit funksiya kelsa, uni chaqiramiz
-      if (onSubmit) {
-        onSubmit(formData);
+      if (!response.ok) {
+        throw new Error(`Server xatosi: ${response.status}`);
       }
 
-      // Modal bo'lsa yopamiz
+      // Telegram ochish
+      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=site1`;
+      window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+
+      // Modalni yopish va formani tozalash
       if (isModal && onClose) {
         setTimeout(() => {
+          setFormData({ name: '', phone: '', countryCode: '998' });
+          setPhoneInputValue('');
           onClose();
           setIsLoading(false);
-          setFormData({ name: '', phone: '' });
-        }, 1000);
+        }, 300);
       } else {
+        setFormData({ name: '', phone: '', countryCode: '998' });
+        setPhoneInputValue('');
         setIsLoading(false);
-        setFormData({ name: '', phone: '' });
       }
-
+      
     } catch (error) {
       console.error('Xatolik:', error);
       setIsLoading(false);
-      
-      // Xatolik bo'lsa ham Telegram botga ochamiz
-      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${encodeURIComponent(formData.phone)}`;
-      window.open(telegramUrl, '_blank');
+      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=site1`;
+      window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Enter bosganda keyingi inputga o'tish
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      phoneInputRef.current?.focus();
+    }
+  };
+
+  // Telefon inputida Enter bosganda
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e as any);
     }
   };
 
   return (
-    <div className={`max-w-md mx-auto border-3 border-purple-400/50 rounded-3xl p-6 md:p-8 mb-6 bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-500/10 backdrop-blur-sm shadow-[0_0_30px_rgba(139,92,246,0.3)] ${isModal ? 'z-[1000]' : ''}`}>
+    <div className={`max-w-md mx-auto border-3 border-purple-400/50 rounded-3xl p-6 md:p-8 mb-6 bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-500/10 backdrop-blur-sm shadow-[0_0_30px_rgba(139,92,246,0.3)] relative ${isModal ? 'z-[1000]' : ''}`}>
+      
       {isModal && onClose && (
-        <button 
+        <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-white text-2xl hover:text-purple-300 transition-colors"
         >
-          &times;
+          ×
         </button>
       )}
-      
+
       <h3 className="text-2xl md:text-3xl font-black text-center mb-6 bg-gradient-to-r from-purple-300 to-purple-400 text-transparent bg-clip-text">
         KURSGA QATNASHISH UCHUN<br/>RO'YXATDAN O'TING:
       </h3>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Ism inputi */}
         <div>
-          <label className="block text-sm mb-2 text-white">Ismingizni kiriting:</label>
           <input
+            ref={nameInputRef}
             type="text"
             placeholder="Ismingiz"
             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/50 border-2 border-purple-400/30 focus:border-purple-400 outline-none transition-all hover:border-purple-300 backdrop-blur-sm"
             value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            onChange={handleNameChange}
             required
             disabled={isLoading}
+            onKeyDown={handleNameKeyDown}
           />
         </div>
-        
+
+        {/* Telefon raqami */}
         <div>
-          <label className="block text-sm mb-2 text-white">Telefon raqamingiz:</label>
-          <div className="flex gap-2">
-            <select className="px-3 py-3 rounded-xl bg-purple-700/50 text-white border-2 border-purple-400/50 hover:border-purple-400 transition-all backdrop-blur-sm" disabled>
-              <option>UZ</option>
+          <div className="flex rounded-xl overflow-hidden border-2 border-purple-400/30 focus-within:border-purple-400">
+            
+            {/* Mamlakat tanlovi */}
+            <select
+              value={formData.countryCode}
+              onChange={handleCountryChange}
+              disabled={isLoading}
+              className="px-3 py-3 bg-purple-700/60 text-white border-r border-purple-400/40 focus:outline-none cursor-pointer min-w-[100px] appearance-none"
+            >
+              {COUNTRIES.map((country) => (
+                <option key={`${country.code}-${country.name}`} value={country.code}>
+                  {country.flag} +{country.code}
+                </option>
+              ))}
             </select>
+            
+            {/* Telefon raqami inputi - TYPE="TEXT" va INPUTMODE="NUMERIC" */}
             <input
-              type="tel"
-              placeholder="+998"
-              className="flex-1 px-4 py-3 rounded-xl bg-white/10 text-white border-2 border-purple-400/30 focus:border-purple-400 outline-none transition-all hover:border-purple-300 backdrop-blur-sm"
-              value={formatPhoneNumber(formData.phone)}
+              ref={phoneInputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Raqamingiz"
+              className="flex-1 px-4 py-3 bg-white/10 text-white placeholder-white/50 focus:outline-none"
+              value={phoneInputValue}
               onChange={handlePhoneChange}
               required
               disabled={isLoading}
+              onKeyDown={handlePhoneKeyDown}
+              maxLength={12}
             />
+          </div>
+          
+          {/* Ma'lumot */}
+          <div className="mt-2 text-sm text-purple-200 text-center">
+            {formData.phone.length > 0 ? (
+              <span>Backendga yuboriladi: {formData.countryCode}{formData.phone}</span>
+            ) : (
+              <span>Faqat raqamlar kiriting</span>
+            )}
           </div>
         </div>
 
-        <button 
+        {/* Submit button */}
+        <button
           type="submit"
           disabled={isLoading}
-          className={`w-full bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] text-white font-black py-6 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6]'}`}
+          className={`w-full bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] text-white font-black py-6 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          {isLoading ? 'Yuborilmoqda...' : 'Ro\'yxatdan o\'tish'}
+          {isLoading ? 'Yuborilmoqda...' : "Ro'yxatdan o'tish"}
         </button>
       </form>
     </div>
