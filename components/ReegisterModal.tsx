@@ -23,8 +23,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         className="relative w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
-        <RegistrationForm 
-          onSubmit={handleSubmit} 
+        <RegistrationForm  
           isModal={true}
           onClose={onClose}
         />

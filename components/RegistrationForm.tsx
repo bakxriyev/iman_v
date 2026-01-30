@@ -237,14 +237,8 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
             />
           </div>
           
-          {/* Ma'lumot */}
-          <div className="mt-2 text-sm text-purple-200 text-center">
-            {formData.phone.length > 0 ? (
-              <span>Backendga yuboriladi: {formData.countryCode}{formData.phone}</span>
-            ) : (
-              <span>Faqat raqamlar kiriting</span>
-            )}
-          </div>
+ 
+         
         </div>
 
         {/* Submit button */}

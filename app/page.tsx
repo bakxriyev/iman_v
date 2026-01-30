@@ -252,7 +252,7 @@ const ImanAhmedovaLanding: React.FC = () => {
                 </div>
               </div>
             }>
-              <RegistrationForm onSubmit={handleFormSubmit} />
+              <RegistrationForm />
             </Suspense>
           </div>
         </section>
