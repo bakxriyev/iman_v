@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 const BACKEND_API_URL = "https://b.imanakhmedovna.uz/users";
 const TELEGRAM_BOT_USERNAME = "ImanAkhmedovna_bot";
+const BACKEND_TIMEOUT = 2000; // 2 sekund
 
 const COUNTRIES = [
   { code: '998', flag: '🇺🇿', name: "O'zbekiston" },
@@ -19,19 +20,18 @@ const COUNTRIES = [
 const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = ({ isModal = false, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
-    phone: '', // Faqat raqamlar, masalan: "901234567"
+    phone: '',
     countryCode: '998',
   });
   
   const [isLoading, setIsLoading] = useState(false);
-  const [phoneInputValue, setPhoneInputValue] = useState(''); // Input'da ko'rinadigan qiymat
+  const [phoneInputValue, setPhoneInputValue] = useState('');
   
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCountry = COUNTRIES.find(c => c.code === formData.countryCode) || COUNTRIES[0];
 
-  // Modal ochilganda ism inputiga focus
   useEffect(() => {
     if (isModal && nameInputRef.current) {
       setTimeout(() => {
@@ -40,32 +40,22 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
     }
   }, [isModal]);
 
-  // Mamlakat o'zgarganda telefon input'ini tozalash
   useEffect(() => {
     setPhoneInputValue('');
     setFormData(prev => ({ ...prev, phone: '' }));
   }, [formData.countryCode]);
 
-  // Ism o'zgartirish
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, name: e.target.value });
   };
 
-  // Telefon raqamini o'zgartirish - SODDA VERSIYA
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
-    // Faqat raqamlar qabul qilish
     const numbersOnly = value.replace(/\D/g, '');
-    
-    // Input'da ko'rinish uchun
     setPhoneInputValue(numbersOnly);
-    
-    // Asosiy state uchun
     setFormData({ ...formData, phone: numbersOnly });
   };
 
-  // Mamlakat o'zgarganda
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const code = e.target.value;
     setFormData({ 
@@ -75,7 +65,6 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
     });
     setPhoneInputValue('');
     
-    // Telefon inputiga focus qaytarish
     setTimeout(() => {
       phoneInputRef.current?.focus();
     }, 50);
@@ -83,77 +72,83 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Validatsiya
+    
     if (!formData.name.trim()) {
       alert("Iltimos, ismingizni kiriting");
       nameInputRef.current?.focus();
-      setIsLoading(false);
       return;
     }
 
     if (!formData.phone || formData.phone.length < 7) {
       alert("Iltimos, to'liq telefon raqamini kiriting (kamida 7 raqam)");
       phoneInputRef.current?.focus();
-      setIsLoading(false);
       return;
     }
 
-    try {
-      // Backendga yuborish (998901234567 formatida)
-      const fullPhone = formData.countryCode + formData.phone;
-      
-      console.log('Yuborilayotgan ma\'lumotlar:', {
-        full_name: formData.name.trim(),
-        phone_number: fullPhone,
-        address: "b"
-      });
+    setIsLoading(true);
 
-      const response = await fetch(BACKEND_API_URL, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          full_name: formData.name.trim(),
-          phone_number: fullPhone,
-          address: "b"
-        }),
-      });
+    const fullPhone = formData.countryCode + formData.phone;
+    const userData = {
+      full_name: formData.name.trim(),
+      phone_number: fullPhone,
+      address: "b"
+    };
 
-      if (!response.ok) {
-        throw new Error(`Server xatosi: ${response.status}`);
+    // 1. Avval telegram botga o'tishni ochamiz (ASOSIY QISMI)
+    const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=site1`;
+    const telegramWindow = window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    
+    // 2. Keyin backendga ma'lumot yuborishga urinamiz (LEKIN HECH KUTMAYMIZ)
+    const sendToBackend = async () => {
+      try {
+        // Timeout bilan so'rov yuboramiz
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), BACKEND_TIMEOUT)
+        );
+
+        const fetchPromise = fetch(BACKEND_API_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(userData),
+        });
+
+        // Faqat 2 soniya kutamiz, keyin davom etamiz
+        await Promise.race([fetchPromise, timeoutPromise]);
+        
+        // Agar vaqt ichida javob kelsa
+        const response = await fetchPromise;
+        if (response.ok) {
+          console.log('Ma\'lumotlar backendga muvaffaqiyatli yuborildi');
+        }
+      } catch (error) {
+        // Xato bo'lsa ham, hech narsa qilmaymiz (konsolga yozamiz)
+        console.log('Backend xatosi (bu foydalanuvchi uchun muhim emas):', error);
       }
+    };
 
-      // Telegram ochish
-      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=site1`;
-      window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    // Backendga yuborishni parallel bajarish
+    sendToBackend();
 
-      // Modalni yopish va formani tozalash
-      if (isModal && onClose) {
-        setTimeout(() => {
-          setFormData({ name: '', phone: '', countryCode: '998' });
-          setPhoneInputValue('');
-          onClose();
-          setIsLoading(false);
-        }, 300);
-      } else {
-        setFormData({ name: '', phone: '', countryCode: '998' });
-        setPhoneInputValue('');
-        setIsLoading(false);
-      }
-      
-    } catch (error) {
-      console.error('Xatolik:', error);
+    // 3. Formani tozalash va modalni yopish
+    setTimeout(() => {
+      setFormData({ name: '', phone: '', countryCode: '998' });
+      setPhoneInputValue('');
       setIsLoading(false);
-      const telegramUrl = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=site1`;
-      window.open(telegramUrl, '_blank', 'noopener,noreferrer');
-    }
+      
+      if (isModal && onClose) {
+        onClose();
+      }
+      
+      // Telegram oynasiga focus qilish (agar foydalanuvchi uni yopmagan bo'lsa)
+      if (telegramWindow && !telegramWindow.closed) {
+        telegramWindow.focus();
+      }
+    }, 500);
   };
 
-  // Enter bosganda keyingi inputga o'tish
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -161,7 +156,6 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
     }
   };
 
-  // Telefon inputida Enter bosganda
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -187,7 +181,6 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Ism inputi */}
         <div>
           <input
             ref={nameInputRef}
@@ -202,11 +195,9 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
           />
         </div>
 
-        {/* Telefon raqami */}
         <div>
           <div className="flex rounded-xl overflow-hidden border-2 border-purple-400/30 focus-within:border-purple-400">
             
-            {/* Mamlakat tanlovi */}
             <select
               value={formData.countryCode}
               onChange={handleCountryChange}
@@ -220,7 +211,6 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
               ))}
             </select>
             
-            {/* Telefon raqami inputi - TYPE="TEXT" va INPUTMODE="NUMERIC" */}
             <input
               ref={phoneInputRef}
               type="text"
@@ -236,20 +226,18 @@ const RegistrationForm: React.FC<{ isModal?: boolean; onClose?: () => void }> = 
               maxLength={12}
             />
           </div>
-          
- 
-         
         </div>
 
-        {/* Submit button */}
         <button
           type="submit"
           disabled={isLoading}
           className={`w-full bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] text-white font-black py-6 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          {isLoading ? 'Yuborilmoqda...' : "Ro'yxatdan o'tish"}
+          {isLoading ? 'Telegramga o\'tilmoqda...' : "Ro'yxatdan o'tish"}
         </button>
       </form>
+      
+   
     </div>
   );
 };
