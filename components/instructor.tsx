@@ -26,7 +26,7 @@ const InstructorSection: React.FC = () => {
               <div className="rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(139,92,246,0.4)] md:shadow-[0_20px_50px_rgba(139,92,246,0.5)] border-2 md:border-4 border-purple-500/40">
                 <div className="aspect-[2/4] relative">
                   <img
-                    src="/iman.jpg"
+                    src="https://ik.imagekit.io/kamron/iman.jpg"
                     alt="Iman Akhmedova"
                     className="w-full h-full object-cover object-top"
                     loading="lazy"

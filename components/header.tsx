@@ -4,7 +4,7 @@ const Header: React.FC = () => {
   return (
     <div className="flex justify-between items-start mb-0">
       <div>
-        <img className='w-28 h-28 -mt-8' src="/logo.png" alt="logo" />
+        <img className='w-28 h-28 -mt-8' src="https://ik.imagekit.io/kamron/logo.png" alt="logo" />
       </div>
       <div className="text-right text-xs md:text-sm">
         <p>Yillab olgan bilimlarimni</p>

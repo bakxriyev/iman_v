@@ -7,17 +7,17 @@ const TestimonialsSection: React.FC = () => {
   const [isTestimonialAutoPlay, setIsTestimonialAutoPlay] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-const testimonialAutoPlayRef =
-  useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+  const testimonialAutoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ImageKit base URL
+  const IMAGEKIT_BASE_URL = 'https://ik.imagekit.io/kamron';
 
   // Testimonial rasm urllari 1 dan 32 gacha
   const testimonials = Array.from({ length: 32 }, (_, i) => ({
     id: i + 1,
-    img: `/${i + 1}.png`
+    img: `${IMAGEKIT_BASE_URL}/${i + 1}.png`
   }));
 
   // Testimonial avtomatik o'tish
@@ -178,14 +178,14 @@ const testimonialAutoPlayRef =
           </div>
           
         </div>
-         <div className="text-center mt-2">
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6] text-white font-black py-6 px-20 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Kursga qatnashish
-            </button>
-          </div>
+        <div className="text-center mt-2">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] hover:from-[#7c3aed] hover:via-[#6d28d9] hover:to-[#5b21b6] text-white font-black py-6 px-20 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Kursga qatnashish
+          </button>
+        </div>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>

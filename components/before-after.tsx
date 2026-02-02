@@ -17,7 +17,7 @@ const BeforeAfterSection: React.FC = () => {
             <div className="mb-6">
               <div className="aspect-video bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center mb-4 border-2 border-purple-400/20 overflow-hidden">
                 <img 
-                  src="/avvalgi.png" 
+                  src="https://ik.imagekit.io/kamron/avvalgi.png" 
                   alt="Oldingi siz"
                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                   loading="lazy"
@@ -50,7 +50,7 @@ const BeforeAfterSection: React.FC = () => {
             <div className="mb-6">
               <div className="aspect-video bg-gradient-to-br from-purple-900/50 to-purple-800/50 rounded-2xl flex items-center justify-center mb-4 border-2 border-purple-300/30 overflow-hidden">
                 <img 
-                  src="/keyin.png" 
+                  src="https://ik.imagekit.io/kamron/keyin.png" 
                   alt="Kursdan keyingi siz"
                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                   loading="lazy"

@@ -198,7 +198,7 @@ const ImanAhmedovaLanding: React.FC = () => {
       });
 
       // Preload critical images
-      const criticalImages = ['/iman.jpg', '/logo.png'];
+      const criticalImages = ['https://ik.imagekit.io/kamron/iman.jpg', 'https://ik.imagekit.io/kamron/logo.png'];
       criticalImages.forEach(src => {
         const link = document.createElement('link');
         link.rel = 'preload';
