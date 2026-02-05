@@ -120,6 +120,7 @@ const criticalStyles = `
 const ImanAhmedovaLanding: React.FC = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibleSections, setVisibleSections] = useState({
     hero: true,
     instructor: false,
@@ -236,26 +237,54 @@ const ImanAhmedovaLanding: React.FC = () => {
             <Header />
             <MainHeading />
             
-            <Suspense fallback={
-              <div className="aspect-video bg-gradient-to-br from-purple-900/20 to-black/50 rounded-2xl skeleton"></div>
-            }>
-              <HeroVideoPlayer />
-            </Suspense>
-            
-            <Suspense fallback={
-              <div className="max-w-md mx-auto border-3 border-purple-400/50 rounded-3xl p-6 md:p-8 mb-6 bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-500/10 backdrop-blur-sm shadow-[0_0_30px_rgba(139,92,246,0.3)]">
-                <div className="h-8 bg-purple-500/20 rounded mb-4 skeleton"></div>
-                <div className="space-y-4">
-                  <div className="h-12 bg-purple-500/10 rounded-xl skeleton"></div>
-                  <div className="h-12 bg-purple-500/10 rounded-xl skeleton"></div>
-                  <div className="h-16 bg-gradient-to-b from-purple-600/20 to-purple-700/20 rounded-full skeleton"></div>
-                </div>
+            <div className="relative">
+              <Suspense fallback={
+                <div className="aspect-video bg-gradient-to-br from-purple-900/20 to-black/50 rounded-2xl skeleton"></div>
+              }>
+                <HeroVideoPlayer />
+              </Suspense>
+
+              {/* Tugma rasm ustiga sal chiqib turishi uchun */}
+              <div className="absolute inset-x-0 bottom-0 flex justify-center translate-y-1/2 px-4">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full max-w-md bg-gradient-to-b from-[#8b5cf6] via-[#7c3aed] to-[#6d28d9] text-white font-black py-6 rounded-full text-xl md:text-2xl shadow-[0_10px_0_0_#4c1d95,0_15px_30px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_0_0_#4c1d95,0_12px_30px_rgba(139,92,246,0.6)] active:shadow-[0_3px_0_0_#4c1d95] active:translate-y-2 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Ro'yxatdan o'tish
+                </button>
               </div>
-            }>
-              <RegistrationForm />
-            </Suspense>
+            </div>
           </div>
         </section>
+
+        {/* Modal */}
+        {isModalOpen && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 overflow-y-auto"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div 
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
+              <Suspense fallback={
+                <div className="max-w-md mx-auto border-3 border-purple-400/50 rounded-3xl p-6 md:p-8 mb-6 bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-500/10 backdrop-blur-sm shadow-[0_0_30px_rgba(139,92,246,0.3)]">
+                  <div className="h-8 bg-purple-500/20 rounded mb-4 skeleton"></div>
+                  <div className="space-y-4">
+                    <div className="h-12 bg-purple-500/10 rounded-xl skeleton"></div>
+                    <div className="h-12 bg-purple-500/10 rounded-xl skeleton"></div>
+                    <div className="h-16 bg-gradient-to-b from-purple-600/20 to-purple-700/20 rounded-full skeleton"></div>
+                  </div>
+                </div>
+              }>
+                <RegistrationForm 
+                  isModal={true} 
+                  onClose={() => setIsModalOpen(false)} 
+                />
+              </Suspense>
+            </div>
+          </div>
+        )}
 
         {/* Lazy Loaded Sections with Intersection Observer */}
         <div id="instructor" className="content-visibility-auto">
